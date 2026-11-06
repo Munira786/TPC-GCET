@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Training & Placement Cell Portal
 
-## Getting Started
+A campus placement portal for students and the placement office (TPC).
+Students maintain one profile and apply to companies they're eligible
+for; the placement office manages companies, eligibility criteria, and
+application status.
 
-First, run the development server:
+## Tech stack
+
+- **Framework:** Next.js 16 (App Router, Server Actions, TypeScript)
+- **UI:** Tailwind CSS v4 + shadcn/ui (Base UI primitives)
+- **Database:** SQLite via Prisma ORM
+- **Auth:** Custom JWT session cookies (`jose`), bcrypt password hashing
+- **Validation:** Zod + React Hook Form
+- **File storage:** Resumes stored on local disk under `/uploads` (private, served through an authenticated API route)
+
+## Getting started
 
 ```bash
+npm install
+npx prisma migrate deploy   # create the SQLite database
+npx prisma db seed          # load demo admin/students/companies
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Environment variables live in `.env` (already created for local dev —
+see `.env.example` for the template). At minimum you need:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+DATABASE_URL="file:./dev.db"
+JWT_SECRET="a long random string"
+```
 
-## Learn More
+## Demo credentials
 
-To learn more about Next.js, take a look at the following resources:
+Seeded by `prisma/seed.ts`:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Role | Login | Password |
+|---|---|---|
+| Admin | `admin@tpc.edu` | `Admin@123` |
+| Student (complete profile) | `21CSE001` (Aarav Sharma) | `Student@123` |
+| Student (complete profile) | `21IT014` (Priya Verma) | `Student@123` |
+| Student (complete profile) | `21ECE022` (Rohan Gupta) | `Student@123` |
+| Student (incomplete profile) | `22CSE045` (Ishita Rao) | `Student@123` |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Re-run `npx prisma db seed` any time to reset back to this demo data
+(existing rows are upserted, not duplicated).
 
-## Deploy on Vercel
+## How it works
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Students** sign in with the enrollment number + password issued by
+the college (seeded here as demo accounts — in a real deployment these
+would be provisioned from the college's student records rather than
+self-registered). On first login they fill a one-time profile
+(personal + academic details, resume PDF, optional skills/links).
+Once complete, they can browse companies — eligibility (CGPA,
+department, backlogs, year) is computed against each company's
+criteria and shown as a badge — apply in one click, and track status
+per application.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Admins** sign in separately and get a dashboard to browse/filter
+students, manage companies (create/edit/delete, set eligibility
+criteria and deadlines), review applicants per company, move
+applications through Applied → Shortlisted → Selected/Rejected,
+download resumes, and export an applicant list to CSV.
+
+## Project structure
+
+```
+prisma/schema.prisma        Database schema (Student, Admin, Company, Application)
+prisma/seed.ts               Demo data
+src/actions/                 Server Actions (auth, student profile/apply, admin CRUD)
+src/app/student/(portal)/    Student dashboard, companies, applications, profile
+src/app/admin/(portal)/      Admin dashboard, students, companies
+src/app/api/files/resume/    Authenticated resume download
+src/app/api/admin/.../export CSV export of applicants
+src/lib/                     Auth, Prisma client, eligibility logic, validation schemas
+src/proxy.ts                 Route protection (Next.js 16 middleware convention)
+```
+
+## Notes for production use
+
+- Swap `JWT_SECRET` for a strong random value and keep it out of version control.
+- SQLite is used for zero-config local development; the Prisma schema
+  can be pointed at PostgreSQL by changing the `datasource` provider
+  and connection string.
+- Resumes are stored on local disk (`/uploads`, gitignored). For a
+  multi-instance deployment, swap `src/lib/files.ts` for an
+  object-storage backend (S3-compatible).

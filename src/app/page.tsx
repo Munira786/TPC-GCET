@@ -1,69 +1,114 @@
-import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight, GraduationCap, ShieldCheck, Briefcase, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { getSession } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
-export default function Home() {
+export default async function Home() {
+  const session = await getSession();
+  if (session?.role === "STUDENT") redirect("/student/dashboard");
+  if (session?.role === "ADMIN") redirect("/admin/dashboard");
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
+    <div className="flex flex-1 flex-col">
+      <header className="border-b border-border/70">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+          <div className="flex items-center gap-2">
+            <span className="flex size-8 items-center justify-center rounded-md bg-foreground text-background text-sm font-semibold">
+              TP
+            </span>
+            <span className="text-sm font-semibold tracking-tight">
+              Training &amp; Placement Cell
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" render={<Link href="/admin/login">Admin</Link>} />
+            <Button size="sm" render={<Link href="/student/login">Student login</Link>} />
+          </div>
+        </div>
+      </header>
+
+      <main className="flex flex-1 flex-col">
+        <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col items-center gap-10 px-4 py-20 text-center sm:px-6 sm:py-28">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/50 px-3 py-1 text-xs font-medium text-muted-foreground">
+            <Briefcase className="size-3.5" />
+            Campus placements, streamlined
+          </div>
+          <h1 className="max-w-2xl text-4xl font-semibold tracking-tight sm:text-5xl">
+            One portal for every placement, from application to offer.
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="max-w-xl text-balance text-base text-muted-foreground sm:text-lg">
+            Students track eligibility and applications in one place. The
+            placement office manages companies, criteria, and hiring status
+            without spreadsheets.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button
+              size="lg"
+              render={
+                <Link href="/student/login">
+                  I&apos;m a student
+                  <ArrowRight className="size-4" />
+                </Link>
+              }
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+            <Button
+              size="lg"
+              variant="outline"
+              render={
+                <Link href="/admin/login">
+                  Placement office login
+                  <ShieldCheck className="size-4" />
+                </Link>
+              }
+            />
+          </div>
+
+          <div className="mt-10 grid w-full max-w-4xl gap-4 text-left sm:grid-cols-3">
+            <FeatureCard
+              icon={GraduationCap}
+              title="Eligibility, automatically"
+              description="Students only see companies they actually qualify for — CGPA, department, backlogs, and year, checked instantly."
+            />
+            <FeatureCard
+              icon={Users}
+              title="One profile, every application"
+              description="Fill academics and upload a resume once. Apply to any eligible company in a click."
+            />
+            <FeatureCard
+              icon={ShieldCheck}
+              title="Full visibility for the TPC"
+              description="Manage companies, review applicants, update hiring status, and export applicant lists to CSV."
+            />
+          </div>
+        </section>
       </main>
+
+      <footer className="border-t border-border/70 py-6">
+        <p className="text-center text-xs text-muted-foreground">
+          Training &amp; Placement Cell Portal
+        </p>
+      </footer>
+    </div>
+  );
+}
+
+function FeatureCard({
+  icon: Icon,
+  title,
+  description,
+}: {
+  icon: typeof GraduationCap;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+      <div className="mb-3 flex size-9 items-center justify-center rounded-md bg-secondary">
+        <Icon className="size-4.5" />
+      </div>
+      <h3 className="text-sm font-semibold">{title}</h3>
+      <p className="mt-1.5 text-sm text-muted-foreground">{description}</p>
     </div>
   );
 }
